@@ -88,15 +88,16 @@ class Passenger extends Thread {
 
     while (enjoy) {
       try {
-        // Wait and arrive to the port
+        // Wait
         stime = (int) (700*Math.random());
         sleep(stime);
-        // Choose the destination
+
+        // Choose the destination at random
         dest = (int) (((double) Assignment2.DESTINATIONS)*Math.random());
         System.out.println("Passenger " + id + " wants to go to " + Assignment2.destName[dest]);
 
-        // come to the airport and board a aeroplane to my destination
-        // (might wait if there is no such aeroplane ready)
+        // come to the airport and board an aeroplane to my destination
+        // (might have to wait if there is no such aeroplane ready)
         sh = sp.wait4Ship(dest);
 
         // Should be executed after the aeroplane is on the pad and taking passengers
@@ -105,7 +106,6 @@ class Passenger extends Thread {
         sh.wait4launch();
 
         // Enjoy the ride
-
         // Should be executed after the aeroplane has launched.
         System.out.println("Passenger "+id+" enjoying the ride to "+Assignment2.destName[dest]+ ": Woohooooo!");
 
@@ -132,6 +132,7 @@ class Aeroplane extends Thread {
   private Airport sp;
   private boolean enjoy;
   // your code here (other local variables and semaphores)
+  private int passengers;
 
   // constructor
   public Aeroplane(Airport sp, int id) {
@@ -139,6 +140,7 @@ class Aeroplane extends Thread {
     this.id = id;
     enjoy = true;
     // your code here (local variable and semaphore initializations)
+    passengers = 0;
   }
 
   // the aeroplane thread executes this
@@ -183,11 +185,13 @@ class Aeroplane extends Thread {
   // called by the passengers leaving the aeroplane
   public void leave() throws InterruptedException  {
     // your code here
+    passengers--; // decrement # of passengers on plane
   }
 
   // called by the passengers sitting in the aeroplane, to wait
   // until the launch
   public void wait4launch() throws InterruptedException {
+    passengers++; // increments # of passengers on plane
     // your code here
   }
 
@@ -201,9 +205,7 @@ class Aeroplane extends Thread {
 /* The class implementing the Airport. */
 /* This might be convenient place to put lots of the synchronization code into */
 class Airport {
-  Aeroplane[] pads;
-  // what is sitting on a given pad
-
+  Aeroplane[] pads; // what is sitting on a given pad
   // your code here (other local variables and semaphores)
 
   // constructor
@@ -217,6 +219,7 @@ class Airport {
       pads[i] = null;
     }
     // your code here (local variable and semaphore initializations)
+
   }
 
   // called by a passenger wanting to go to the given destination
