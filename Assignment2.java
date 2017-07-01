@@ -40,6 +40,9 @@ public class Assignment2 {
     for (i=0; i<PASSENGERS; i++) try {passengers[i].interrupt();} catch (Exception e) { }
 
     // Wait until everybody else is finished
+    try {
+      sp.join();
+    } catch (InterruptedException e) { } // wait until Airport thread finishes
 
     // This should be the last thing done by this program:
     System.out.println("Simulation finished.");
