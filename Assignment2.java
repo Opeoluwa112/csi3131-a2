@@ -24,25 +24,40 @@ public class Assignment2 {
     Airport sp = new Airport();
 
     /* create aeroplanes and passengers*/
-    for (i=0; i<AEROPLANES; i++) sships[i] = new Aeroplane(sp, i);
-    for (i=0; i<PASSENGERS; i++) passengers[i] = new Passenger(sp, i);
+    for (i=0; i<AEROPLANES; i++) {
+      sships[i] = new Aeroplane(sp, i);
+    }
+    for (i=0; i<PASSENGERS; i++) {
+      passengers[i] = new Passenger(sp, i);
+    }
 
     /* now launch them */
-    for (i=0; i<AEROPLANES; i++) sships[i].start();
-    for (i=0; i<PASSENGERS; i++) passengers[i].start();
+    for (i=0; i<AEROPLANES; i++) {
+      sships[i].start();
+    }
+    for (i=0; i<PASSENGERS; i++) {
+      passengers[i].start();
+    }
 
     // let them enjoy for 20 seconds
-    try { Thread.sleep(20000);} catch (InterruptedException e) { }
+    try {
+      Thread.sleep(20000);
+    } catch (InterruptedException e) { }
 
     /* now stop them */
     // note how we are using deferred cancellation
-    for (i=0; i<AEROPLANES; i++) try {sships[i].interrupt();} catch (Exception e) { }
-    for (i=0; i<PASSENGERS; i++) try {passengers[i].interrupt();} catch (Exception e) { }
+    for (i=0; i<AEROPLANES; i++) {
+      try {
+        sships[i].interrupt();
+      } catch (Exception e) { }
+    }
+    for (i=0; i<PASSENGERS; i++) {
+      try {
+        passengers[i].interrupt();
+      } catch (Exception e) { }
+    }
 
     // Wait until everybody else is finished
-    try {
-      sp.join();
-    } catch (InterruptedException e) { } // wait until Airport thread finishes
 
     // This should be the last thing done by this program:
     System.out.println("Simulation finished.");
@@ -209,6 +224,8 @@ class Airport {
   // Careful here, as the pad might be empty at this moment
   public Aeroplane wait4Ship(int dest) throws InterruptedException {
     // your code here
+
+    return new Aeroplane(this, 0);
   }
 
   // called by an aeroplane to tell the airport that it is accepting passengers now to destination dest
@@ -222,6 +239,8 @@ class Airport {
   // Try to rotate the pads so that no destination is starved
   public int wait4landing(Aeroplane sh)  throws InterruptedException  {
     // your code here
+
+    return 0;
   }
 
   // called by an aeroplane when it launches, to inform the
