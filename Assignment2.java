@@ -199,6 +199,8 @@ class Aeroplane extends Thread {
   // until landing
   public void wait4landing() throws InterruptedException {
     // your code here
+
+
   }
 }
 
@@ -207,6 +209,7 @@ class Aeroplane extends Thread {
 class Airport {
   Aeroplane[] pads; // what is sitting on a given pad
   // your code here (other local variables and semaphores)
+  Semaphore[] semPad; // to know when a plane can land on a given pad
 
   // constructor
   public Airport() {
@@ -217,6 +220,7 @@ class Airport {
     // Value null means the pad is empty
     for(i=0; i<Assignment2.DESTINATIONS; i++) {
       pads[i] = null;
+      semPad[i] = new Semaphore(1, true); // initialize with 1 because pads start empty
     }
     // your code here (local variable and semaphore initializations)
 
@@ -242,13 +246,32 @@ class Airport {
   // Try to rotate the pads so that no destination is starved
   public int wait4landing(Aeroplane sh)  throws InterruptedException  {
     // your code here
+    boolean found = false;
+    int pad;
 
-    return 0;
+    while (!found) { // loop until available landing pad is free
+      for (int i=0; i<Assignment2.DESTINATIONS; i++) {
+        if (sp.pads[i]) {
+          try {
+            semPad[i].acquire();
+          } catch (InterruptedException e) {
+            break;
+          }
+          found = true;
+          pad = i;
+          sp.pads[i] = sh;
+        }
+      }
+    }
+
+    return pad;
   }
 
   // called by an aeroplane when it launches, to inform the
   // airport that the pad has been emptied
   public void launch(int dest) {
     // your code here
+    semPad[dest].release(); // free up given launch pad
+    pads[dest] = null; // pad is now empty
   }
 }
