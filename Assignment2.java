@@ -132,7 +132,8 @@ class Aeroplane extends Thread {
   private Airport sp;
   private boolean enjoy;
   // your code here (other local variables and semaphores)
-  private int passengers;
+  private int passengers; // number of passengers aboard
+  Semaphore semLand; // to know if aeroplane has landed and can allow passengers to leave
   Semaphore semBoard; // to know if a passenger can board this aeroplane
 
   // constructor
@@ -143,6 +144,7 @@ class Aeroplane extends Thread {
     // your code here (local variable and semaphore initializations)
     passengers = 0;
     semBoard = new Semaphore(0, true);
+    semLand = new Semaphore(0, true);
   }
 
   // the aeroplane thread executes this
@@ -157,8 +159,13 @@ class Aeroplane extends Thread {
         System.out.println("Aeroplane " + id + " landing on pad " + dest);
 
         // Tell the passengers that we have landed
+        wait4landing();
 
         // Wait until all passengers leave
+        for (int j=0; j<passengers; j++) {
+          leave();
+        }
+        semBoard.release(); // free up permit to allow passengers to board
 
         System.out.println("Aeroplane " + id + " boarding to "+Assignment2.destName[dest]+" now!");
 
@@ -202,7 +209,7 @@ class Aeroplane extends Thread {
   public void wait4landing() throws InterruptedException {
     // your code here
 
-
+    semBoard.release();
   }
 }
 
