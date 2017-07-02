@@ -1,4 +1,5 @@
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 /***************************************************************************************/
 
@@ -135,6 +136,7 @@ class Aeroplane extends Thread {
   private int passengers; // number of passengers aboard
   Semaphore semLand; // to know if aeroplane has landed and can allow passengers to leave
   Semaphore semBoard; // to know if a passenger can board this aeroplane
+  Semaphore semLaunch; // know if aeroplane can launch
 
   // constructor
   public Aeroplane(Airport sp, int id) {
@@ -145,6 +147,7 @@ class Aeroplane extends Thread {
     passengers = 0;
     semBoard = new Semaphore(0, true);
     semLand = new Semaphore(0, true);
+    semLaunch = new Semaphore(0, true);
   }
 
   // the aeroplane thread executes this
@@ -170,6 +173,7 @@ class Aeroplane extends Thread {
         System.out.println("Aeroplane " + id + " boarding to "+Assignment2.destName[dest]+" now!");
 
         // the passengers can start to board now
+        sp.boarding(dest);
 
         // Wait until full of passengers
 
@@ -202,6 +206,10 @@ class Aeroplane extends Thread {
   public void wait4launch() throws InterruptedException {
     passengers++; // increments # of passengers on plane
     // your code here
+    if (passengers == 3) {
+
+    }
+
   }
 
   // called by the bored passengers sitting in the aeroplane, to wait
@@ -218,7 +226,7 @@ class Aeroplane extends Thread {
 class Airport {
   Aeroplane[] pads; // what is sitting on a given pad
   // your code here (other local variables and semaphores)
-  Semaphore[] semPad; // to know when a plane can land on a given pad
+  Semaphore[] semPad = new Semaphore[Assignment2.DESTINATIONS]; // to know when a plane can land on a given pad
 
   // constructor
   public Airport() {
@@ -256,11 +264,11 @@ class Airport {
   public int wait4landing(Aeroplane sh)  throws InterruptedException  {
     // your code here
     boolean found = false;
-    int pad;
+    int pad = -1;
 
     while (!found) { // loop until available landing pad is free
       for (int i=0; i<Assignment2.DESTINATIONS; i++) {
-        if (sp.pads[i]) {
+        if (pads[i] == null) {
           try {
             semPad[i].acquire();
           } catch (InterruptedException e) {
@@ -268,7 +276,7 @@ class Airport {
           }
           found = true;
           pad = i;
-          sp.pads[i] = sh;
+          pads[i] = sh;
         }
       }
     }
