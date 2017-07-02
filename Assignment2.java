@@ -133,6 +133,7 @@ class Aeroplane extends Thread {
   private boolean enjoy;
   // your code here (other local variables and semaphores)
   private int passengers;
+  Semaphore semBoard; // to know if a passenger can board this aeroplane
 
   // constructor
   public Aeroplane(Airport sp, int id) {
@@ -141,6 +142,7 @@ class Aeroplane extends Thread {
     enjoy = true;
     // your code here (local variable and semaphore initializations)
     passengers = 0;
+    semBoard = new Semaphore(0, true);
   }
 
   // the aeroplane thread executes this
