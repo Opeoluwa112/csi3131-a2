@@ -148,9 +148,9 @@ class Aeroplane extends Thread {
   public void run() {
     int stime;
     int dest;
-    Semaphore semBoard; // to know if a passenger can board this aeroplane
-    Semaphore semLeave; // to know if a passenger can leave the aeroplane (once plane has landed)
-    Semaphore semLaunch; // know if aeroplane can launch
+    Semaphore semLeave; // for a passenger to request to leave
+    Semaphore semBoard; // for a passenger to request to board
+    //Semaphore semLaunch; // know if aeroplane can launch
 
     while (enjoy) {
       try {
@@ -158,9 +158,9 @@ class Aeroplane extends Thread {
         dest = sp.wait4landing(this);
         System.out.println("Aeroplane " + id + " landing on pad " + dest);
 
-        semBoard = sp.semPadBoard[dest];
+        semLeave = sp.semPadLeave[dest];
         // Tell the passengers that we have landed
-        wait4landing();
+        semLeave.release();
 
         // Wait until all passengers leave
         for (int j=0; j<passengers; j++) {
@@ -223,7 +223,6 @@ class Aeroplane extends Thread {
   public void wait4landing() throws InterruptedException {
     // your code here
 
-    semLand.release();
   }
 }
 
@@ -232,8 +231,9 @@ class Aeroplane extends Thread {
 class Airport {
   Aeroplane[] pads; // what is sitting on a given pad
   // your code here (other local variables and semaphores)
-  Semaphore[] semPadLand = new Semaphore[Assignment2.DESTINATIONS]; // to know when a plane can land on a given pad
-  Semaphore[] semPadBoard = new Semaphore[Assignment2.DESTINATIONS]; // to know when a passenger can board plane on pad
+  Semaphore[] semPadLand = new Semaphore[Assignment2.DESTINATIONS]; // for a plane to request to land
+  Semaphore[] semPadLeave = new Semaphore[Assignment2.DESTINATIONS]; // for a passenger to request to leave
+  Semaphore[] semPadBoard = new Semaphore[Assignment2.DESTINATIONS]; // for a passenger to request to board
 
   // constructor
   public Airport() {
@@ -245,6 +245,7 @@ class Airport {
     for(i=0; i<Assignment2.DESTINATIONS; i++) {
       pads[i] = null;
       semPadLand[i] = new Semaphore(1, true); // initialize with 1 because pads start empty
+      semPadLeave[i] = new Semaphore(0, true);
       semPadBoard[i] = new Semaphore(0, true);
     }
     // your code here (local variable and semaphore initializations
