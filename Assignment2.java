@@ -136,6 +136,7 @@ class Aeroplane extends Thread {
   int passengers; // number of passengers aboard
   Semaphore semLeave; // for passenger to request to leave
   Semaphore semLaunch; // for aeroplane to request to launch
+  Semaphore semLiftOff; // to alert passengers that we are launching
   Semaphore semLand; // for aeroplane to request to land
 
   // constructor
@@ -145,6 +146,7 @@ class Aeroplane extends Thread {
     enjoy = true;
     // your code here (local variable and semaphore initializations)
     passengers = 0;
+    semLiftOff = new Semaphore(0, true);
   }
 
   // the aeroplane thread executes this
@@ -181,6 +183,7 @@ class Aeroplane extends Thread {
         } catch (InterruptedException e) { break; }
 
         // 4, 3, 2, 1, Launch!
+        semLiftOff.release();
         sp.launch(dest);
 
         System.out.println("Aeroplane " + id + " launches towards "+Assignment2.destName[dest]+"!");
@@ -213,10 +216,9 @@ class Aeroplane extends Thread {
   // until the launch
   public void wait4launch() throws InterruptedException {
     // your code here
-
-      try {
-        semLaunch.acquire(); // wait until launch
-      } catch (InterruptedException e) { }
+    try {
+      semLiftOff.acquire();
+    } catch (InterruptedException e) { }
   }
 
   // called by the bored passengers sitting in the aeroplane, to wait
