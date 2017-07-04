@@ -100,7 +100,6 @@ class Passenger extends Thread {
         // come to the airport and board an aeroplane to my destination
         // (might have to wait if there is no such aeroplane ready)
         sh = sp.wait4Ship(dest);
-        // ------------- progress so far
 
         // Should be executed after the aeroplane is on the pad and taking passengers
         System.out.println("Passenger " + id + " has boarded aeroplane " + sh.id + ", destination: "+Assignment2.destName[dest]);
@@ -172,10 +171,10 @@ class Aeroplane extends Thread {
 
         // the passengers can start to board now
         sp.boarding(dest);
-        // ------------- progress so far
 
         // Wait until full of passengers
-        wait4launch();
+        semLaunch = sp.semPadLaunch[dest];
+        sp.launch(dest);
 
         // 4, 3, 2, 1, Launch!
 
@@ -209,7 +208,9 @@ class Aeroplane extends Thread {
   // until the launch
   public void wait4launch() throws InterruptedException {
     // your code here
-
+    if (passengers == 3) {
+          semPadLaunch.release(); // ready to launch
+    }
   }
 
   // called by the bored passengers sitting in the aeroplane, to wait
@@ -242,6 +243,7 @@ class Airport {
       semPadLand[i] = new Semaphore(1, true); // initialize with 1 because pads start empty
       semPadLeave[i] = new Semaphore(0, true);
       semPadBoard[i] = new Semaphore(0, true);
+      semPadLaunch[i] = new Semaphore(0, true);
     }
     // your code here (local variable and semaphore initializations
     // see above
@@ -267,14 +269,7 @@ class Airport {
 
     plane.passengers++; // increase # passengers
 
-    if (plane.passengers < 3) {
-      semPadBoard[dest].release(); // allow more passengers to board
-    }
-    else if (plane.passengers == 3) {
-      semPadLaunch[dest].release(); // tell aeroplane we are ready to launch
-    }
-
-    return pads[dest];
+    return plane;
   }
 
   // called by an aeroplane to tell the airport that it is accepting passengers now to destination dest
@@ -314,6 +309,10 @@ class Airport {
   // airport that the pad has been emptied
   public void launch(int dest) {
     // your code here
+    try {
+      semPadLaunch[dest].acquire(); // wait until plane is full to launch
+    } catch (InterruptedException) { }
+
     semPadLand[dest].release(); // free up given launch pad
     pads[dest] = null; // pad is now empty
   }
