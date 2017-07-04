@@ -317,14 +317,13 @@ class Airport {
     int pad = -1;
 
     while (!found) {
-      for (int i=0; i<Assignment2.DESTINATIONS; i++) {
+      int i = (int) (4*Math.random());
 
-        if (pads[i] == null) { // check empty pad
-          found = true;
-          pad = i;
-          pads[i] = sh;
-          break;
-        }
+      if (pads[i] == null) { // check empty pad
+        found = true;
+        pad = i;
+        pads[i] = sh;
+        break;
       }
     }
 
