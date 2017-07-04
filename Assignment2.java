@@ -155,7 +155,6 @@ class Aeroplane extends Thread {
     while (enjoy) {
       try {
         // Wait until there an empty landing pad, then land
-        System.out.println("I am aeroplane "+id+" and I am in the air waiting to land");
         dest = sp.wait4landing(this);
         System.out.println("Aeroplane " + id + " landing on pad " + dest);
 
@@ -177,9 +176,12 @@ class Aeroplane extends Thread {
         sp.boarding(dest);
 
         // Wait until full of passengers
-        sp.launch(dest);
+        try {
+          semLaunch.acquire();
+        } catch (InterruptedException e) { break; }
 
         // 4, 3, 2, 1, Launch!
+        sp.launch(dest);
 
         System.out.println("Aeroplane " + id + " launches towards "+Assignment2.destName[dest]+"!");
 
@@ -265,17 +267,18 @@ class Airport {
   // Careful here, as the pad might be empty at this moment
   public Aeroplane wait4Ship(int dest) throws InterruptedException {
     // your code here
-    Aeroplane plane = null;
+    Aeroplane plane = pads[dest];
+
     while (plane == null) {
       if (pads[dest] != null) {
         plane = pads[dest];
-        try {
-          semPadBoard[dest].acquire(); // passenger requests to board
-        } catch (InterruptedException e) {
-          break;
-        }
       }
     }
+
+    try {
+      semPadBoard[dest].acquire(); // passenger requests to board
+    } catch (InterruptedException e) { }
+
     plane.passengers++; // increase # passengers
 
     return plane;
@@ -291,17 +294,19 @@ class Airport {
   // Returns the number of the empty pad where to land (might wait
   // until there is an empty pad).
   // Try to rotate the pads so that no destination is starved
-  public int wait4landing(Aeroplane sh)  throws InterruptedException  {
+  public int wait4landing(Aeroplane sh) throws InterruptedException  {
     // your code here
     boolean found = false;
     int pad = -1;
 
-    while (!found) { // loop until available landing pad is free
+    while (!found) {
       for (int i=0; i<Assignment2.DESTINATIONS; i++) {
+
         if (pads[i] == null) { // check empty pad
           found = true;
           pad = i;
           pads[i] = sh;
+          break;
         }
       }
     }
