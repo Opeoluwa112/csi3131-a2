@@ -41,12 +41,15 @@ public class Assignment2 {
     }
 
     // let them enjoy for 20 seconds
+    System.out.println("******************** START ENJOYING 20 SECONDS ********************");
     try {
       Thread.sleep(20000);
     } catch (InterruptedException e) { }
+    System.out.println("******************** DONE ENJOYING 20 SECONDS ********************");
 
     /* now stop them */
     // note how we are using deferred cancellation
+    System.out.println("======================== BOUT TO INTERRUPT ALL YALL");
     for (i=0; i<AEROPLANES; i++) {
       try {
         sships[i].interrupt();
@@ -59,6 +62,16 @@ public class Assignment2 {
     }
 
     // Wait until everybody else is finished
+    for (i=0; i<PASSENGERS; i++) {
+      try {
+        passengers[i].join();
+      } catch (Exception e) { }
+    }
+    for (i=0; i<AEROPLANES; i++) {
+      try {
+        sships[i].join();
+      } catch (Exception e) { }
+    }
 
     // This should be the last thing done by this program:
     System.out.println("Simulation finished.");
@@ -136,8 +149,8 @@ class Aeroplane extends Thread {
   int passengers; // number of passengers aboard
   Semaphore semLeave; // for passenger to request to leave
   Semaphore semLaunch; // for aeroplane to request to launch
-  Semaphore semLiftOff; // to alert passengers that we are launching
-  Semaphore semLand; // for aeroplane to request to land
+  Semaphore semWaitToLaunch; // to alert passengers that we are launching
+  Semaphore semWaitToLand; // to alert passengers that we have landed
 
   // constructor
   public Aeroplane(Airport sp, int id) {
@@ -146,7 +159,8 @@ class Aeroplane extends Thread {
     enjoy = true;
     // your code here (local variable and semaphore initializations)
     passengers = 0;
-    semLiftOff = new Semaphore(0, true);
+    semWaitToLaunch = new Semaphore(0, true);
+    semWaitToLand = new Semaphore(0, true);
   }
 
   // the aeroplane thread executes this
@@ -162,15 +176,11 @@ class Aeroplane extends Thread {
 
         semLeave = sp.semPadLeave[dest];
         semLaunch = sp.semPadLaunch[dest];
-        semLand = sp.semPadLand[dest];
         // Tell the passengers that we have landed
         semLeave.release();
 
         // Wait until all passengers leave
-        for (int i=0; i<passengers; i++) {
-          leave();
-          semLeave.release(); // allow next passenger to leave aeroplane
-        }
+        // TODO ??
 
         System.out.println("Aeroplane " + id + " boarding to "+Assignment2.destName[dest]+" now!");
 
@@ -183,12 +193,12 @@ class Aeroplane extends Thread {
         } catch (InterruptedException e) { break; }
 
         // 4, 3, 2, 1, Launch!
-        semLiftOff.release();
         sp.launch(dest);
 
-        System.out.println("Aeroplane " + id + " launches towards "+Assignment2.destName[dest]+"!");
+        System.out.println("================================================== Aeroplane " + id + " launches towards "+Assignment2.destName[dest]+"!");
 
         // tell the passengers we have launched, so they can enjoy now ;-)
+        semWaitToLaunch.release();
 
         // Fly in the air
         stime = 500+(int) (1500*Math.random());
@@ -209,7 +219,7 @@ class Aeroplane extends Thread {
       semLeave.acquire(); // request to leave
     } catch (InterruptedException e) { }
 
-    passengers--; // decrement # of passengers on plane
+    passengers--;
   }
 
   // called by the passengers sitting in the aeroplane, to wait
@@ -217,8 +227,9 @@ class Aeroplane extends Thread {
   public void wait4launch() throws InterruptedException {
     // your code here
     try {
-      semLiftOff.acquire();
+      semWaitToLaunch.acquire();
     } catch (InterruptedException e) { }
+    semWaitToLaunch.release(); // tell next passenger that we have launched
   }
 
   // called by the bored passengers sitting in the aeroplane, to wait
@@ -226,8 +237,9 @@ class Aeroplane extends Thread {
   public void wait4landing() throws InterruptedException {
     // your code here
     try {
-      semLand.acquire();
+      semWaitToLand.acquire();
     } catch (InterruptedException e) { }
+    semWaitToLand.release(); // tell next passenger that we have landed
   }
 }
 
