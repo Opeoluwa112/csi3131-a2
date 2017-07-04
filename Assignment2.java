@@ -155,6 +155,7 @@ class Aeroplane extends Thread {
     while (enjoy) {
       try {
         // Wait until there an empty landing pad, then land
+        System.out.println("I am aeroplane "+id+" and I am in the air waiting to land");
         dest = sp.wait4landing(this);
         System.out.println("Aeroplane " + id + " landing on pad " + dest);
 
@@ -304,6 +305,10 @@ class Airport {
         }
       }
     }
+
+    try {
+      semPadLand[pad].acquire(); // try to land
+    } catch (InterruptedException e) { }
 
     return pad;
   }
