@@ -133,9 +133,10 @@ class Aeroplane extends Thread {
   private Airport sp;
   private boolean enjoy;
   // your code here (other local variables and semaphores)
-  private int passengers; // number of passengers aboard
+  int passengers; // number of passengers aboard
   Semaphore semLeave; // for passenger to request to leave
   Semaphore semLaunch; // for aeroplane to request to launch
+  Semaphore semLand; // for aeroplane to request to land
 
   // constructor
   public Aeroplane(Airport sp, int id) {
@@ -158,6 +159,8 @@ class Aeroplane extends Thread {
         System.out.println("Aeroplane " + id + " landing on pad " + dest);
 
         semLeave = sp.semPadLeave[dest];
+        semLaunch = sp.semPadLaunch[dest];
+        semLand = sp.semPadLand[dest];
         // Tell the passengers that we have landed
         semLeave.release();
 
@@ -173,7 +176,6 @@ class Aeroplane extends Thread {
         sp.boarding(dest);
 
         // Wait until full of passengers
-        semLaunch = sp.semPadLaunch[dest];
         sp.launch(dest);
 
         // 4, 3, 2, 1, Launch!
@@ -208,8 +210,13 @@ class Aeroplane extends Thread {
   // until the launch
   public void wait4launch() throws InterruptedException {
     // your code here
-    if (passengers == 3) {
-          semPadLaunch.release(); // ready to launch
+    if (passengers == Assignment2.PLANE_SIZE) {
+      semLaunch.release(); // we are ready to launch!
+    }
+    else if (passengers < Assignment2.PLANE_SIZE) {
+      try {
+        semLaunch.acquire(); // wait until launch
+      } catch (InterruptedException e) { }
     }
   }
 
@@ -217,7 +224,9 @@ class Aeroplane extends Thread {
   // until landing
   public void wait4landing() throws InterruptedException {
     // your code here
-
+    try {
+      semLand.acquire();
+    } catch (InterruptedException e) { }
   }
 }
 
@@ -266,7 +275,6 @@ class Airport {
         }
       }
     }
-
     plane.passengers++; // increase # passengers
 
     return plane;
@@ -290,11 +298,6 @@ class Airport {
     while (!found) { // loop until available landing pad is free
       for (int i=0; i<Assignment2.DESTINATIONS; i++) {
         if (pads[i] == null) { // check empty pad
-          try {
-            semPadLand[i].acquire();
-          } catch (InterruptedException e) {
-            break;
-          }
           found = true;
           pad = i;
           pads[i] = sh;
@@ -309,10 +312,6 @@ class Airport {
   // airport that the pad has been emptied
   public void launch(int dest) {
     // your code here
-    try {
-      semPadLaunch[dest].acquire(); // wait until plane is full to launch
-    } catch (InterruptedException) { }
-
     semPadLand[dest].release(); // free up given launch pad
     pads[dest] = null; // pad is now empty
   }
