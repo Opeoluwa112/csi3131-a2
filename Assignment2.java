@@ -213,14 +213,10 @@ class Aeroplane extends Thread {
   // until the launch
   public void wait4launch() throws InterruptedException {
     // your code here
-    if (passengers == Assignment2.PLANE_SIZE) {
-      semLaunch.release(); // we are ready to launch!
-    }
-    else if (passengers < Assignment2.PLANE_SIZE) {
+
       try {
         semLaunch.acquire(); // wait until launch
       } catch (InterruptedException e) { }
-    }
   }
 
   // called by the bored passengers sitting in the aeroplane, to wait
@@ -280,6 +276,13 @@ class Airport {
     } catch (InterruptedException e) { }
 
     plane.passengers++; // increase # passengers
+
+    if (plane.passengers < 3) {
+      semPadBoard[dest].release(); // allow more passengers to board
+    }
+    else if (plane.passengers == 3) {
+      semPadLaunch[dest].release(); // we are ready to launch
+    }
 
     return plane;
   }
