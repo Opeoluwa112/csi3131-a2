@@ -134,9 +134,6 @@ class Aeroplane extends Thread {
   private boolean enjoy;
   // your code here (other local variables and semaphores)
   private int passengers; // number of passengers aboard
-  Semaphore semBoard; // to know if a passenger can board this aeroplane
-  Semaphore semLeave; // to know if a passenger can leave the aeroplane (once plane has landed)
-  Semaphore semLaunch; // know if aeroplane can launch
 
   // constructor
   public Aeroplane(Airport sp, int id) {
@@ -145,15 +142,15 @@ class Aeroplane extends Thread {
     enjoy = true;
     // your code here (local variable and semaphore initializations)
     passengers = 0;
-    semBoard = new Semaphore(0, true);
-    semLeave = new Semaphore(0, true);
-    semLaunch = new Semaphore(0, true);
   }
 
   // the aeroplane thread executes this
   public void run() {
     int stime;
     int dest;
+    Semaphore semBoard; // to know if a passenger can board this aeroplane
+    Semaphore semLeave; // to know if a passenger can leave the aeroplane (once plane has landed)
+    Semaphore semLaunch; // know if aeroplane can launch
 
     while (enjoy) {
       try {
@@ -290,7 +287,7 @@ class Airport {
       for (int i=0; i<Assignment2.DESTINATIONS; i++) {
         if (pads[i] == null) { // check empty pad
           try {
-            semPad[i].acquire();
+            semPadLand[i].acquire();
           } catch (InterruptedException e) {
             break;
           }
