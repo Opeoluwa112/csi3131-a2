@@ -134,8 +134,8 @@ class Aeroplane extends Thread {
   private boolean enjoy;
   // your code here (other local variables and semaphores)
   private int passengers; // number of passengers aboard
-  Semaphore semLand; // to know if aeroplane has landed and can allow passengers to leave
   Semaphore semBoard; // to know if a passenger can board this aeroplane
+  Semaphore semLeave; // to know if a passenger can leave the aeroplane (once plane has landed)
   Semaphore semLaunch; // know if aeroplane can launch
 
   // constructor
@@ -146,7 +146,7 @@ class Aeroplane extends Thread {
     // your code here (local variable and semaphore initializations)
     passengers = 0;
     semBoard = new Semaphore(0, true);
-    semLand = new Semaphore(0, true);
+    semLeave = new Semaphore(0, true);
     semLaunch = new Semaphore(0, true);
   }
 
@@ -161,6 +161,7 @@ class Aeroplane extends Thread {
         dest = sp.wait4landing(this);
         System.out.println("Aeroplane " + id + " landing on pad " + dest);
 
+        semBoard = sp.semPadBoard[dest];
         // Tell the passengers that we have landed
         wait4landing();
 
@@ -168,7 +169,6 @@ class Aeroplane extends Thread {
         for (int j=0; j<passengers; j++) {
           leave();
         }
-        semBoard.release(); // free up permit to allow passengers to board
 
         System.out.println("Aeroplane " + id + " boarding to "+Assignment2.destName[dest]+" now!");
 
@@ -198,17 +198,26 @@ class Aeroplane extends Thread {
   // called by the passengers leaving the aeroplane
   public void leave() throws InterruptedException  {
     // your code here
+    try {
+      semLeave.acquire(); // attempt to leave aeroplane
+    }
+     catch (InterruptedException e) {
+       break;
+     }
     passengers--; // decrement # of passengers on plane
+
+    if (passengers > 0) {
+      semLeave.release(); // allow next passenger to leave aeroplane
+    }
+    else if (passengers == 0) {
+      semBoard.release(); // all passengers have left aeroplane, new ones can board
+    }
   }
 
   // called by the passengers sitting in the aeroplane, to wait
   // until the launch
   public void wait4launch() throws InterruptedException {
-    passengers++; // increments # of passengers on plane
     // your code here
-    if (passengers == 3) {
-
-    }
 
   }
 
@@ -217,7 +226,7 @@ class Aeroplane extends Thread {
   public void wait4landing() throws InterruptedException {
     // your code here
 
-    semBoard.release();
+    semLand.release();
   }
 }
 
@@ -265,6 +274,7 @@ class Airport {
   // called by an aeroplane to tell the airport that it is accepting passengers now to destination dest
   public void boarding(int dest) {
     // your code here
+
   }
 
   // called by an aeroplane returning from a trip
