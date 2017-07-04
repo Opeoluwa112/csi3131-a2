@@ -134,6 +134,9 @@ class Aeroplane extends Thread {
   private boolean enjoy;
   // your code here (other local variables and semaphores)
   private int passengers; // number of passengers aboard
+  Semaphore semBoard; // for a passenger to request to board
+  Semaphore semLeave; // for a passenger to request to leave
+  //Semaphore semLaunch; // know if aeroplane can launch
 
   // constructor
   public Aeroplane(Airport sp, int id) {
@@ -148,9 +151,6 @@ class Aeroplane extends Thread {
   public void run() {
     int stime;
     int dest;
-    Semaphore semLeave; // for a passenger to request to leave
-    Semaphore semBoard; // for a passenger to request to board
-    //Semaphore semLaunch; // know if aeroplane can launch
 
     while (enjoy) {
       try {
@@ -163,9 +163,13 @@ class Aeroplane extends Thread {
         semLeave.release();
 
         // Wait until all passengers leave
-        for (int j=0; j<passengers; j++) {
+        for (int i=0; i<passengers; i++) {
           leave();
+          semLeave.release(); // allow next passenger to leave aeroplane
         }
+
+        semBoard = sp.semPadBoard[dest];
+        semBoard.release(); // allow new passengers to board
 
         System.out.println("Aeroplane " + id + " boarding to "+Assignment2.destName[dest]+" now!");
 
@@ -196,19 +200,10 @@ class Aeroplane extends Thread {
   public void leave() throws InterruptedException  {
     // your code here
     try {
-      semLeave.acquire(); // attempt to leave aeroplane
-    }
-     catch (InterruptedException e) {
-       break;
-     }
-    passengers--; // decrement # of passengers on plane
+      semLeave.acquire(); // request to board
+    } catch (InterruptedException e) { }
 
-    if (passengers > 0) {
-      semLeave.release(); // allow next passenger to leave aeroplane
-    }
-    else if (passengers == 0) {
-      semBoard.release(); // all passengers have left aeroplane, new ones can board
-    }
+    passengers--; // decrement # of passengers on plane
   }
 
   // called by the passengers sitting in the aeroplane, to wait
@@ -306,7 +301,7 @@ class Airport {
   // airport that the pad has been emptied
   public void launch(int dest) {
     // your code here
-    semPad[dest].release(); // free up given launch pad
+    semPadLand[dest].release(); // free up given launch pad
     pads[dest] = null; // pad is now empty
   }
 }
