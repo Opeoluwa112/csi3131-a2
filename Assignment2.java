@@ -318,7 +318,7 @@ class Airport {
     int pad = -1;
 
     while (!found) {
-      int i = (int) ((Assignment2.PLANE_SIZE)*Math.random());
+      int i = (int) ((Assignment2.DESTINATIONS)*Math.random());
 
       if (pads[i] == null) { // check empty pad
         found = true;
