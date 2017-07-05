@@ -177,6 +177,7 @@ class Aeroplane extends Thread {
         semLeave = sp.semPadLeave[dest];
         semLaunch = sp.semPadLaunch[dest];
         // Tell the passengers that we have landed
+        semWaitToLand.release();
         semLeave.release();
 
         // Wait until all passengers leave
@@ -291,10 +292,10 @@ class Airport {
 
     plane.passengers++; // increase # passengers
 
-    if (plane.passengers < 3) {
+    if (plane.passengers < Assignment2.PLANE_SIZE) {
       semPadBoard[dest].release(); // allow more passengers to board
     }
-    else if (plane.passengers == 3) {
+    else if (plane.passengers == Assignment2.PLANE_SIZE) {
       semPadLaunch[dest].release(); // we are ready to launch
     }
 
@@ -317,7 +318,7 @@ class Airport {
     int pad = -1;
 
     while (!found) {
-      int i = (int) (4*Math.random());
+      int i = (int) ((Assignment2.PLANE_SIZE)*Math.random());
 
       if (pads[i] == null) { // check empty pad
         found = true;
